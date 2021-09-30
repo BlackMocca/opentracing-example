@@ -23,7 +23,7 @@ curl -X GET http://127.0.0.1:3000/users
 
 ### Test Get User With Database
 ```curl
-curl -X GET http://127.0.0.1:3000/users/database
+curl -X GET http://127.0.0.1:3000/users/database/psql
 ```
 
 ### Test Error 
