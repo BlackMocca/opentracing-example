@@ -8,7 +8,6 @@ import (
 	"git.innovasive.co.th/backend/helper"
 	helperMiddl "git.innovasive.co.th/backend/helper/middleware"
 	helperRoute "git.innovasive.co.th/backend/helper/route"
-	"git.innovasive.co.th/backend/psql"
 	myMiddL "github.com/Blackmocca/opentracing-example/middleware"
 	route "github.com/Blackmocca/opentracing-example/route"
 	user_grpc_handler "github.com/Blackmocca/opentracing-example/service/user/grpc"
@@ -17,6 +16,7 @@ import (
 	"github.com/Blackmocca/opentracing-example/service/user/usecase"
 	user_validator "github.com/Blackmocca/opentracing-example/service/user/validator"
 	_util_tracing "github.com/Blackmocca/opentracing-example/utils/opentracing"
+	"github.com/Blackmocca/opentracing-example/utils/psql"
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/labstack/echo/v4"
 	echoMiddL "github.com/labstack/echo/v4/middleware"
@@ -38,13 +38,21 @@ func sqlDB(con string) *psql.Client {
 	return db
 }
 
-func main() {
-	psqlClient := sqlDB(PSQL_DATABASE_URL)
+func sqlDBWithTracing(con string, tracer opentracing.Tracer) *psql.Client {
+	db, err := psql.NewPsqlWithTracingConnection(con, tracer)
+	if err != nil {
+		panic(err)
+	}
+	return db
+}
 
+func main() {
 	/* init tracing*/
 	tracer, closer := _util_tracing.Init("opentracing-example")
 	defer closer.Close()
 	opentracing.SetGlobalTracer(tracer)
+
+	psqlClient := sqlDBWithTracing(PSQL_DATABASE_URL, tracer)
 
 	/* init grpc */
 	server := grpc.NewServer(

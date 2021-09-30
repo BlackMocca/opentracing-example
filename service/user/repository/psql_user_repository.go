@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"git.innovasive.co.th/backend/psql"
 	"github.com/Blackmocca/opentracing-example/models"
 	"github.com/Blackmocca/opentracing-example/orm"
 	"github.com/Blackmocca/opentracing-example/service/user"
+	"github.com/Blackmocca/opentracing-example/utils/psql"
 	"github.com/jmoiron/sqlx"
 	"github.com/opentracing/opentracing-go"
 	"github.com/spf13/cast"
@@ -65,7 +65,7 @@ func (p psqlUserRepository) FetchAll(ctx context.Context, args *sync.Map) ([]*mo
 		where,
 	)
 
-	rows, err := p.db.GetClient().Queryx(sql)
+	rows, err := p.db.GetClient().QueryxContext(ctx, sql)
 	if err != nil {
 		return nil, err
 	}
