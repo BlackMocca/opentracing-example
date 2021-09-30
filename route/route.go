@@ -19,7 +19,7 @@ func NewRoute(e *echo.Echo, middl middleware.GoMiddlewareInf) *Route {
 func (r *Route) RegisterRouteUser(handler user.UserHandler, validation _user_validator.Validation) {
 	r.e.GET("/users", handler.FetchAll)
 	r.e.GET("/users/:user_id/cover", handler.GetCover)
-	r.e.GET("/users/database", handler.FetchAllWithDatabase)
+	r.e.GET("/users/database/psql", handler.FetchAllWithDatabase)
 	r.e.GET("/internal-error", handler.InternalError)
 	r.e.GET("/conflict", handler.Conflict)
 }
