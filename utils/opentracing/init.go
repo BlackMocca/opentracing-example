@@ -22,6 +22,11 @@ func Init(service string) (opentracing.Tracer, io.Closer) {
 		},
 	}
 
+	cfg, err := config.FromEnv()
+	if err != nil {
+		panic(err)
+	}
+
 	tracer, closer, err := cfg.NewTracer(config.Logger(jaeger.NullLogger))
 	if err != nil {
 		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))

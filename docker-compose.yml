@@ -1,0 +1,33 @@
+version: "3"
+
+services: 
+
+  opentracing-example:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile-development
+    container_name: opentracing-example
+    env_file: .env
+    networks: 
+      - default
+    ports:
+      - 3000:3000
+    depends_on: 
+      - jaeger
+    volumes:
+      - .:/go/src/github.com/Blackmocca/opentracing-example
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.7@sha256:146de3a8c00e7ce536734d96627a71047d82481c4862ef79560a72dba1b4099a
+    container_name: jaeger
+    networks: 
+      - default
+    ports:
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "16686:16686"
+
+networks:
+  default:
+    external:
+      name: localdev

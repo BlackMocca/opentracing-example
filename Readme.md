@@ -23,6 +23,11 @@ go mod tidy
 go run main.go
 ```
 
+#### Running On docker compose
+```
+docker-compose up
+```
+
 ### Test By Curl
 ```curl
 curl -X GET http://127.0.0.1:3000/users
