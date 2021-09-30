@@ -28,4 +28,8 @@ go run main.go
 curl -X GET http://127.0.0.1:3000/users
 ```
 
-![Work flow Tracing](https://github.com/BlackMocca/opentracing-example/blob/master/workflow.png?raw=true)
+![Work flow Tracing](https://github.com/BlackMocca/opentracing-example/blob/master/assets/github/workflow.png?raw=true)
+
+
+#### Appendix
+Jaeger Sampling https://www.jaegertracing.io/docs/1.26/sampling/

@@ -6,6 +6,8 @@ import (
 
 	"github.com/Blackmocca/opentracing-example/proto/proto_models"
 	"github.com/Blackmocca/opentracing-example/service/user"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type grpcHandler struct {
@@ -19,6 +21,11 @@ func NewGRPCHandler(userUs user.UserUsecase) proto_models.UserServer {
 }
 
 func (g grpcHandler) FetchUserAddress(ctx context.Context, req *proto_models.FetchUserAddressRequest) (*proto_models.FetchUserAddressResponse, error) {
+	span := opentracing.SpanFromContext(ctx)
+	span.LogFields(
+		log.String("id", req.GetId()),
+	)
+
 	userId := req.GetId()
 	time.Sleep(time.Duration(2 * time.Second))
 
