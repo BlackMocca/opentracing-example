@@ -1,0 +1,18 @@
+syntax = "proto3";
+option go_package="./proto_models";
+
+message UserAddress {
+    string address = 1;
+}
+
+message FetchUserAddressRequest {
+    string id = 1;
+}
+
+message FetchUserAddressResponse {
+    UserAddress address =1; 
+}
+
+service User{
+    rpc FetchUserAddress(FetchUserAddressRequest) returns (FetchUserAddressResponse) {}
+}

@@ -2,12 +2,15 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 
+	"git.innovasive.co.th/backend/helper"
 	helperMiddl "git.innovasive.co.th/backend/helper/middleware"
 	helperRoute "git.innovasive.co.th/backend/helper/route"
 	myMiddL "github.com/Blackmocca/opentracing-example/middleware"
 	route "github.com/Blackmocca/opentracing-example/route"
+	user_grpc_handler "github.com/Blackmocca/opentracing-example/service/user/grpc"
 	user_handler "github.com/Blackmocca/opentracing-example/service/user/http"
 	"github.com/Blackmocca/opentracing-example/service/user/repository"
 	"github.com/Blackmocca/opentracing-example/service/user/usecase"
@@ -16,7 +19,13 @@ import (
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/labstack/echo/v4"
 	echoMiddL "github.com/labstack/echo/v4/middleware"
+	otgrpc "github.com/opentracing-contrib/go-grpc"
 	"github.com/opentracing/opentracing-go"
+	"google.golang.org/grpc"
+)
+
+var (
+	GRPC_PORT = helper.GetENV("GRPC_PORT", "3100")
 )
 
 func main() {
@@ -24,6 +33,17 @@ func main() {
 	tracer, closer := _util_tracing.Init("opentracing-example")
 	defer closer.Close()
 	opentracing.SetGlobalTracer(tracer)
+
+	/* init grpc */
+	server := grpc.NewServer(
+		grpc.UnaryInterceptor(
+			otgrpc.OpenTracingServerInterceptor(tracer),
+		),
+		grpc.StreamInterceptor(
+			otgrpc.OpenTracingStreamServerInterceptor(tracer),
+		),
+	)
+	defer server.GracefulStop()
 
 	e := echo.New()
 	e.HTTPErrorHandler = helperMiddl.SentryCapture(e)
@@ -53,10 +73,36 @@ func main() {
 	userHandler := user_handler.NewUserHandler(userUs)
 	userValidator := user_validator.Validation{}
 
+	grpcUserHandler := user_grpc_handler.NewGRPCHandler(userUs)
+
 	r := route.NewRoute(e, middL)
 	r.RegisterRouteUser(userHandler, userValidator)
+
+	grpcR := route.NewGRPCRoute(server)
+	grpcR.RegisterUserHandler(grpcUserHandler)
+
+	/* serve gprc */
+	go func() {
+		if r := recover(); r != nil {
+			fmt.Println(r.(error))
+		}
+		startGRPCServer(server)
+	}()
 
 	/* serve echo */
 	port := fmt.Sprintf(":%s", "3000")
 	e.Logger.Fatal(e.Start(port))
+}
+
+func startGRPCServer(server *grpc.Server) {
+	listen, err := net.Listen("tcp", fmt.Sprintf(":%s", GRPC_PORT))
+	if err != nil {
+		panic("failed to listen: " + err.Error())
+	}
+
+	/* serve grpc */
+	fmt.Println(fmt.Sprintf("Start grpc Server [::%s]", GRPC_PORT))
+	if err := server.Serve(listen); err != nil {
+		panic(err)
+	}
 }

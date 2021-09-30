@@ -27,3 +27,5 @@ go run main.go
 ```curl
 curl -X GET http://127.0.0.1:3000/users
 ```
+
+![Work flow Tracing](https://github.com/BlackMocca/opentracing-example/blob/master/workflow.png?raw=true)
