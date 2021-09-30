@@ -59,3 +59,20 @@ func (u userHandler) InternalError(c echo.Context) error {
 func (u userHandler) Conflict(c echo.Context) error {
 	return echo.NewHTTPError(http.StatusConflict, "Custom message Conflict Error")
 }
+
+func (u userHandler) FetchAllWithDatabase(c echo.Context) error {
+	var ctx = c.Request().Context()
+	var args = new(sync.Map)
+
+	time.Sleep(time.Duration(1 * time.Second))
+
+	users, err := u.userUs.FetchAllWithDatabase(ctx, args)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	resp := map[string]interface{}{
+		"users": users,
+	}
+	return c.JSON(http.StatusOK, resp)
+}

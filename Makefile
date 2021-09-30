@@ -27,7 +27,7 @@ app.migration.down:
 	docker exec -it $(service) migrate -database $(db_url)  -path $(path) down
 
 app.migration.seed:
-	docker exec -it $(service) migrate -database $(db_url)  -path $(path)/seed/master seed-up
+	docker exec -it $(service) migrate -database $(db_url)  -path $(path) seed-up
 
 mockery:
 	mockery --all --dir service/$(service) --output service/$(service)/mocks

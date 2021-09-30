@@ -8,6 +8,7 @@ import (
 	"git.innovasive.co.th/backend/helper"
 	helperMiddl "git.innovasive.co.th/backend/helper/middleware"
 	helperRoute "git.innovasive.co.th/backend/helper/route"
+	"git.innovasive.co.th/backend/psql"
 	myMiddL "github.com/Blackmocca/opentracing-example/middleware"
 	route "github.com/Blackmocca/opentracing-example/route"
 	user_grpc_handler "github.com/Blackmocca/opentracing-example/service/user/grpc"
@@ -25,10 +26,21 @@ import (
 )
 
 var (
-	GRPC_PORT = helper.GetENV("GRPC_PORT", "3100")
+	GRPC_PORT         = helper.GetENV("GRPC_PORT", "3100")
+	PSQL_DATABASE_URL = helper.GetENV("PSQL_DATABASE_URL", "postgres://postgres:postgres@psql_db:5432/app_example?sslmode=disable")
 )
 
+func sqlDB(con string) *psql.Client {
+	db, err := psql.NewPsqlConnection(con)
+	if err != nil {
+		panic(err)
+	}
+	return db
+}
+
 func main() {
+	psqlClient := sqlDB(PSQL_DATABASE_URL)
+
 	/* init tracing*/
 	tracer, closer := _util_tracing.Init("opentracing-example")
 	defer closer.Close()
@@ -69,8 +81,12 @@ func main() {
 	e.Use(middL.SetTracer)
 
 	userRepo := repository.NewUserRepository()
-	userUs := usecase.NewUserUsecase(userRepo)
+	psqlRepo := repository.NewPsqlUserRepository(psqlClient)
+
+	userUs := usecase.NewUserUsecase(userRepo, psqlRepo)
+
 	userHandler := user_handler.NewUserHandler(userUs)
+
 	userValidator := user_validator.Validation{}
 
 	grpcUserHandler := user_grpc_handler.NewGRPCHandler(userUs)

@@ -1,0 +1,4 @@
+INSERT INTO "users" ("id", "name", "user_type_id") VALUES
+('1', 'Tawatchai Monsombul', '8c22b186-ae36-481a-b06d-6fe7a3a48a77'),
+('2', 'Tanawat Konkod', '8c22b186-ae36-481a-b06d-6fe7a3a48a77'),
+('3', 'Apisara Keawngam', 'ac809526-f9b6-4c4e-a11d-92a3a3f3c117');

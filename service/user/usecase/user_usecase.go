@@ -12,11 +12,13 @@ import (
 
 type userUsecase struct {
 	userRepo user.UserRepository
+	psqlRepo user.UserRepository
 }
 
-func NewUserUsecase(userRepo user.UserRepository) user.UserRepository {
+func NewUserUsecase(userRepo user.UserRepository, psqlRepo user.UserRepository) user.UserUsecase {
 	return &userUsecase{
 		userRepo: userRepo,
+		psqlRepo: psqlRepo,
 	}
 }
 
@@ -25,4 +27,11 @@ func (u userUsecase) FetchAll(ctx context.Context, args *sync.Map) ([]*models.Us
 	defer span.Finish()
 	time.Sleep(time.Duration(2 * time.Second))
 	return u.userRepo.FetchAll(ctx, args)
+}
+
+func (u userUsecase) FetchAllWithDatabase(ctx context.Context, args *sync.Map) ([]*models.User, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FetchAllWithdatabase-Usecase")
+	defer span.Finish()
+	time.Sleep(time.Duration(2 * time.Second))
+	return u.psqlRepo.FetchAll(ctx, args)
 }
