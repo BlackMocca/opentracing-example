@@ -9,6 +9,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/spf13/cast"
 )
 
 func (m *GoMiddleware) SetTracer(next echo.HandlerFunc) echo.HandlerFunc {
@@ -29,29 +30,32 @@ func (m *GoMiddleware) SetTracer(next echo.HandlerFunc) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
-		setTagByEcho(span, c)
-		setLogByEcho(span, c)
 		defer span.Finish()
 
 		newReq := c.Request().WithContext(ctx)
 		c.SetRequest(newReq)
 
-		return next(c)
+		err = next(c)
+		httpError, isHTTPError := err.(*echo.HTTPError)
+		setTagByEcho(span, c)
+		setLogByEcho(span, c)
+
+		if isHTTPError && httpError != nil {
+			setError(span, c, httpError)
+		} else {
+			span.SetTag("error", false)
+			span.SetTag("http.status_code", c.Response().Status)
+		}
+
+		return nil
 	}
 }
 
 func setTagByEcho(span opentracing.Span, c echo.Context) {
-	var isError = false
-	if c.Response().Status > http.StatusNoContent && c.Response().Status != http.StatusConflict {
-		isError = true
-	}
-
 	span.SetTag("host", c.Request().Host)
 	span.SetTag("User-Agent", c.Request().Header.Get("User-Agent"))
 	span.SetTag("http.method", c.Request().Method)
-	span.SetTag("http.status_code", c.Response().Status)
 	span.SetTag("http.url", c.Path())
-	span.SetTag("error", isError)
 }
 
 func setLogByEcho(span opentracing.Span, c echo.Context) {
@@ -80,5 +84,19 @@ func setLogByEcho(span opentracing.Span, c echo.Context) {
 	span.LogFields(
 		log.String("querystring", c.QueryString()),
 		log.String("param", paramLogString),
+	)
+}
+
+func setError(span opentracing.Span, c echo.Context, err *echo.HTTPError) {
+	var isError = false
+	if err.Code > http.StatusNoContent && err.Code != http.StatusConflict {
+		isError = true
+	}
+
+	span.SetTag("error", isError)
+	span.SetTag("http.status_code", err.Code)
+
+	span.LogFields(
+		log.Message(cast.ToString(err.Message)),
 	)
 }

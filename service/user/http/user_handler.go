@@ -51,3 +51,11 @@ func (u userHandler) GetCover(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, resp)
 }
+
+func (u userHandler) InternalError(c echo.Context) error {
+	return echo.NewHTTPError(http.StatusInternalServerError, "Custom message error")
+}
+
+func (u userHandler) Conflict(c echo.Context) error {
+	return echo.NewHTTPError(http.StatusConflict, "Custom message Conflict Error")
+}
