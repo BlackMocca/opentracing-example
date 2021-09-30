@@ -6,4 +6,5 @@ import (
 
 type UserHandler interface {
 	FetchAll(c echo.Context) error
+	GetCover(c echo.Context) error
 }

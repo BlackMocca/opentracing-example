@@ -1,4 +1,4 @@
-package middleware
+package opentracing
 
 import (
 	"fmt"
@@ -7,40 +7,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
 )
 
-func (m *GoMiddleware) SetTracer(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		var span opentracing.Span
-		var ctx = c.Request().Context()
-		var spanName = fmt.Sprintf("%s %s %s", c.Scheme(), c.Request().Method, c.Path())
-
-		spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(c.Request().Header))
-		switch err {
-		case nil:
-			/* has parent span context */
-			span = opentracing.StartSpan(spanName, ext.RPCServerOption(spanCtx))
-		case opentracing.ErrSpanContextNotFound:
-			/* new span context */
-			span, ctx = opentracing.StartSpanFromContext(ctx, spanName)
-		default:
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-		}
-
-		setTagByEcho(span, c)
-		setLogByEcho(span, c)
-		defer span.Finish()
-
-		newReq := c.Request().WithContext(ctx)
-		c.SetRequest(newReq)
-
-		return next(c)
-	}
-}
-
-func setTagByEcho(span opentracing.Span, c echo.Context) {
+func SetTagByEcho(span opentracing.Span, c echo.Context) {
 	var isError = false
 	if c.Response().Status > http.StatusNoContent && c.Response().Status != http.StatusConflict {
 		isError = true
@@ -54,7 +24,7 @@ func setTagByEcho(span opentracing.Span, c echo.Context) {
 	span.SetTag("error", isError)
 }
 
-func setLogByEcho(span opentracing.Span, c echo.Context) {
+func SetLogByEcho(span opentracing.Span, c echo.Context) {
 	var paramNameM = map[string]string{}
 	var paramsName = c.ParamNames()
 	var paramsValue = c.ParamValues()

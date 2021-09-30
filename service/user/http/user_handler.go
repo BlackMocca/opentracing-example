@@ -35,3 +35,19 @@ func (u userHandler) FetchAll(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, resp)
 }
+
+func (u userHandler) GetCover(c echo.Context) error {
+	var userId = c.Param("user_id")
+
+	time.Sleep(time.Duration(1 * time.Second))
+
+	cover := map[string]interface{}{
+		"1": "cover/tmp1.jpg",
+		"2": "cover/tmp2.jpg",
+	}
+
+	resp := map[string]interface{}{
+		"cover": cover[userId],
+	}
+	return c.JSON(http.StatusOK, resp)
+}
