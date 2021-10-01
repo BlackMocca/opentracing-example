@@ -3,6 +3,7 @@ package psql
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/opentracing/opentracing-go"
@@ -20,11 +21,45 @@ func NewTracingHook(tracing opentracing.Tracer) *TracingHook {
 	}
 }
 
+func (h *TracingHook) getOperationName(query string) string {
+	defaultOperationName := "database"
+	selectReg := regexp.MustCompile(`SELECT`)
+	insertReg := regexp.MustCompile(`INSERT\s+INTO`)
+	updateReg := regexp.MustCompile(`UPDATE\s+.+\s+SET`)
+	deleteReg := regexp.MustCompile(`DELETE\s+FROM`)
+
+	query = strings.ToUpper(query)
+	selectIndex := selectReg.FindStringIndex(query)
+	insertIndex := insertReg.FindStringIndex(query)
+	updateIndex := updateReg.FindStringIndex(query)
+	deleteIndex := deleteReg.FindStringIndex(query)
+
+	if selectIndex == nil && insertIndex == nil && updateIndex == nil && deleteIndex == nil {
+		return defaultOperationName
+	}
+
+	if deleteIndex != nil {
+		return "DELETE"
+	}
+	if updateIndex != nil {
+		return "UPDATE"
+	}
+	if insertIndex != nil {
+		return "INSERT"
+	}
+	if selectIndex != nil {
+		return "SELECT"
+	}
+
+	return "NONE"
+}
+
 // Before hook will print the query with it's args and return the context with the timestamp
 func (h *TracingHook) Before(ctx context.Context, query string, args ...interface{}) (context.Context, error) {
 	if ctx != nil {
 		span := opentracing.SpanFromContext(ctx)
 		span, ctx = opentracing.StartSpanFromContext(ctx, "database", opentracing.ChildOf(span.Context()))
+		span.SetTag("operation", h.getOperationName(query))
 		span.LogFields(
 			otlog.String("statement", query),
 		)

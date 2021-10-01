@@ -12,6 +12,8 @@ import (
 type Client struct {
 	db            *sqlx.DB
 	connectionURI string
+	driverName    string
+	tracer        opentracing.Tracer
 }
 
 func NewPsqlConnection(connectionStr string) (*Client, error) {
@@ -20,7 +22,7 @@ func NewPsqlConnection(connectionStr string) (*Client, error) {
 		return nil, err
 	}
 
-	db, err := sqlx.Connect("postgres", addr)
+	db, err := sqlx.Connect(postgres_driver, addr)
 	if err != nil {
 		return nil, err
 	}
@@ -28,6 +30,7 @@ func NewPsqlConnection(connectionStr string) (*Client, error) {
 	return &Client{
 		db:            db,
 		connectionURI: connectionStr,
+		driverName:    postgres_driver,
 	}, nil
 }
 
@@ -37,7 +40,7 @@ func NewPsqlWithTracingConnection(connectionStr string, tracing opentracing.Trac
 		return nil, err
 	}
 
-	sql.Register("ot_pg", sqlhooks.Wrap(&pg.Driver{}, NewTracingHook(tracing)))
+	sql.Register(opentracing_driver, sqlhooks.Wrap(&pg.Driver{}, NewTracingHook(tracing)))
 
 	db, err := sqlx.Connect(opentracing_driver, addr)
 	if err != nil {
@@ -47,6 +50,8 @@ func NewPsqlWithTracingConnection(connectionStr string, tracing opentracing.Trac
 	return &Client{
 		db:            db,
 		connectionURI: connectionStr,
+		driverName:    opentracing_driver,
+		tracer:        tracing,
 	}, nil
 }
 
@@ -74,10 +79,26 @@ func (c *Client) Reconnect() error {
 		return nil
 	}
 
-	client, err := NewPsqlConnection(c.connectionURI)
-	if err != nil {
-		return err
+	switch c.driverName {
+	case postgres_driver:
+		client, err := NewPsqlConnection(c.connectionURI)
+		if err != nil {
+			return err
+		}
+
+		c.db = client.GetClient()
+	case opentracing_driver:
+		addr, err := pg.ParseURL(c.connectionURI)
+		if err != nil {
+			return err
+		}
+		db, err := sqlx.Connect(opentracing_driver, addr)
+		if err != nil {
+			return err
+		}
+
+		c.db = db
 	}
-	c.db = client.GetClient()
+
 	return nil
 }

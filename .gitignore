@@ -4,3 +4,5 @@ tmp/*
 .env
 
 .DS_Store
+cover.out
+coverage.html

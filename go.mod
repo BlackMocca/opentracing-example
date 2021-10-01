@@ -20,7 +20,7 @@ require (
 	github.com/opentracing-contrib/go-grpc v0.0.0-20210225150812-73cb765af46e
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/qustavo/sqlhooks/v2 v2.1.0 // indirect
+	github.com/qustavo/sqlhooks/v2 v2.1.0
 	github.com/spf13/cast v1.3.0
 	github.com/stretchr/objx v0.1.1 // indirect
 	github.com/stretchr/testify v1.7.0
@@ -30,4 +30,5 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.25.0
+	gopkg.in/DATA-DOG/go-sqlmock.v2 v2.0.0-20180914054222-c19298f520d0
 )
