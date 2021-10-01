@@ -43,6 +43,24 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=app_example
 
+  mongo_db:
+    build: 
+      dockerfile: ./Dockerfile
+      context: ./docker-script/mongodb
+    container_name: mongo_db
+    networks: 
+      - default
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+      - MONGO_INITDB_DATABASE=app_example
+      - MONGO_USERNAME=mongoadmin
+      - MONGO_PASSWORD=mongoadmin
+
+    
+
   adminer:
     image: adminer
     restart: always
