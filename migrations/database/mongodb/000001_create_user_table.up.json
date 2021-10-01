@@ -1,0 +1,19 @@
+[
+    {
+      "create": "user",
+      "autoIndexId": true
+    },
+    {
+      "createIndexes": "user",
+      "indexes": [
+          {
+              "key": {
+                  "id": 1
+              },
+              "name": "unique_user_id",
+              "unique": true
+          }
+      ]
+    }
+  ]
+  
