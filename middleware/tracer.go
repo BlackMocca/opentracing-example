@@ -47,7 +47,7 @@ func (m *GoMiddleware) SetTracer(next echo.HandlerFunc) echo.HandlerFunc {
 			span.SetTag("http.status_code", c.Response().Status)
 		}
 
-		return nil
+		return err
 	}
 }
 
