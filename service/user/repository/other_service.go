@@ -22,7 +22,7 @@ import (
 func getCover(ctx context.Context, users []*models.User) error {
 	span := opentracing.SpanFromContext(ctx)
 	client := resty.New()
-	client.Debug = false
+	client.Debug = true
 	host := "http://127.0.0.1:3000"
 
 	for index, _ := range users {
